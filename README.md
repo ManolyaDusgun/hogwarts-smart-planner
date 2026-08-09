@@ -14,7 +14,7 @@
 
 | Büyücü İstatistikleri & Grafik | Net & Soru Takibi |
 | :---: | :---: |
-| ![İstatistikler](./screenshot-analytics.png) | ![Net Takibi](./screenshot-net.png) |
+| ![İstatistikler](./Ekran%20Resmi%202026-08-09%2021.03.38.png) | ![Net Takibi](./Ekran%20Resmi%202026-08-09%2021.03.54.png) |
 
 ---
 
