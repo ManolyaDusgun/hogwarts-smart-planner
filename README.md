@@ -1,6 +1,6 @@
 # 🧙‍♂️ Hogwarts & Minecraft Smart Event Planner
 
-![Hogwarts Smart Planner Preview](./preview.png)
+![Hogwarts Smart Planner Preview](preview.png)
 
 > **Hogwarts ve Minecraft estetiğiyle tasarlanmış, büyülü asa efektleri, bina temaları, Pomodoro odak zamanlayıcısı ve sınav net takip modülü içeren web tabanlı akıllı etkinlik ve ders planlayıcısı.**
 
@@ -10,11 +10,11 @@
 
 | Ders Takvimi & Bina Seçici | Hogwarts Odak Odası |
 | :---: | :---: |
-| ![Takvim Görünümü](./screenshot-calendar.png) | ![Odak Odası](./screenshot-pomodoro.png) |
+| ![Takvim Görünümü](screenshot-calendar.png) | ![Odak Odası](screenshot-pomodoro.jpeg) |
 
 | Büyücü İstatistikleri & Grafik | Net & Soru Takibi |
 | :---: | :---: |
-| ![İstatistikler](./Ekran%20Resmi%202026-08-09%2021.03.38.png) | ![Net Takibi](./Ekran%20Resmi%202026-08-09%2021.03.54.png) |
+| ![İstatistikler](<Ekran Resmi 2026-08-09 21.03.38.png>) | ![Net Takibi](<Ekran Resmi 2026-08-09 21.03.54.png>) |
 
 ---
 
