@@ -10,7 +10,7 @@
 
 | Ders Takvimi & Bina Seçici | Hogwarts Odak Odası |
 | :---: | :---: |
-| ![Takvim Görünümü](./screenshot-calendar.png) | ![Odak Odası](./screenshot-pomodoro.png) |
+| ![Takvim Görünümü](./calendar.png) | ![Odak Odası](./screenshot-pomodoro.png) |
 
 | Büyücü İstatistikleri & Grafik | Net & Soru Takibi |
 | :---: | :---: |
