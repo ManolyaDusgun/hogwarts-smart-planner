@@ -1,11 +1,8 @@
 # 🧙‍♂️ Hogwarts & Minecraft Smart Event Planner
 
+![Hogwarts Smart Planner Preview](./preview.png)
+
 > **Hogwarts ve Minecraft estetiğiyle tasarlanmış, büyülü asa efektleri, bina temaları, Pomodoro odak zamanlayıcısı ve sınav net takip modülü içeren web tabanlı akıllı etkinlik ve ders planlayıcısı.**
-
----
-
-## ⚡ Canlı Önizleme & Demo
-👉 **[Web Sitesini Canlıda Dene](https://manolyadusgun.github.io/hogwarts-smart-planner/)**
 
 ---
 
