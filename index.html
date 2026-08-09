@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="tr" data-house="gryffindor">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hogwarts Akıllı Ders & Büyü Planlayıcısı</title>
+  
+  <!-- FullCalendar CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Hogwarts Magic Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Gryffindor Theme Default */
+      --house-primary: #740001;
+      --house-secondary: #d3a625;
+      --house-bg: #1a0808;
+      --card-bg: #2a0e0e;
+      --border-color: #531818;
+      --text-color: #fff8e7;
+    }
+
+    [data-house="slytherin"] {
+      --house-primary: #1a472a;
+      --house-secondary: #aaaaaa;
+      --house-bg: #0b1a10;
+      --card-bg: #142a1d;
+      --border-color: #235238;
+      --text-color: #e8f5e9;
+    }
+
+    [data-house="ravenclaw"] {
+      --house-primary: #0e1a40;
+      --house-secondary: #946b2d;
+      --house-bg: #080d21;
+      --card-bg: #121c3b;
+      --border-color: #21325e;
+      --text-color: #e0e7ff;
+    }
+
+    [data-house="hufflepuff"] {
+      --house-primary: #ecb939;
+      --house-secondary: #946b2d;
+      --house-bg: #1c1815;
+      --card-bg: #2b2420;
+      --border-color: #4a3e37;
+      --text-color: #fef3c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+
+    body {
+      background-color: var(--house-bg);
+      color: var(--text-color);
+      display: flex; flex-direction: column; min-height: 100vh;
+      overflow-x: hidden;
+      transition: all 0.4s ease;
+    }
+
+    /* Magic Wand Sparkle Canvas */
+    #wandCanvas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 9999;
+    }
+
+    /* Hogwarts Header */
+    header {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      border-bottom: 3px solid var(--house-secondary);
+      padding: 18px 36px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .brand { display: flex; align-items: center; gap: 16px; }
+    
+    .brand-wand {
+      font-size: 2.5rem; color: var(--house-secondary);
+      filter: drop-shadow(0 0 10px var(--house-secondary));
+      animation: wandWiggle 3s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    @keyframes wandWiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(15deg) scale(1.1); }
+    }
+
+    .brand h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.8rem; color: var(--house-secondary);
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    /* House Selector Crests */
+    .house-selector {
+      display: flex; gap: 10px; background: rgba(0,0,0,0.3);
+      padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color);
+    }
+
+    .house-btn {
+      background: none; border: none; font-size: 1.4rem; cursor: pointer;
+      opacity: 0.5; transition: all 0.2s ease; padding: 4px;
+    }
+
+    .house-btn:hover, .house-btn.active { opacity: 1; transform: scale(1.2); }
+
+    /* Hogwarts Magic Buttons */
+    .btn {
+      padding: 12px 22px; border-radius: 14px;
+      border: 2px solid var(--house-secondary);
+      background: var(--house-primary); color: var(--text-color);
+      font-weight: 700; font-size: 0.95rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      position: relative; overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 25px var(--house-secondary);
+    }
+
+    .btn:active { transform: translateY(0) scale(0.97); }
+
+    /* App Layout */
+    .app-container {
+      display: grid; grid-template-columns: 320px 1fr;
+      gap: 28px; padding: 28px 36px; flex: 1;
+    }
+
+    @media (max-width: 992px) { .app-container { grid-template-columns: 1fr; padding: 16px; } }
+
+    /* Sidebar Cards */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    .sidebar-card {
+      background: var(--card-bg); border-radius: 20px;
+      padding: 22px; border: 2px solid var(--border-color);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      position: relative;
+    }
+
+    .sidebar-title {
+      font-family: 'Cinzel Decorative', serif; font-size: 1.1rem;
+      color: var(--house-secondary); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+    }
+
+    .category-filter { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; }
+
+    .category-item {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.95rem; font-weight: 600; padding: 10px 14px;
+      background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border-color);
+    }
+
+    .category-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--house-secondary); }
+
+    .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .stat-box {
+      background: rgba(0,0,0,0.3); padding: 14px; border-radius: 14px;
+      text-align: center; border: 1px solid var(--border-color);
+    }
+    .stat-number { font-family: 'Cinzel Decorative', serif; font-size: 1.8rem; color: var(--house-secondary); }
+    .stat-label { font-size: 0.8rem; opacity: 0.8; }
+
+    /* Navigation Tabs */
+    .main-content { display: flex; flex-direction: column; gap: 20px; }
+
+    .tab-navigation {
+      display: flex; gap: 10px; background: rgba(0,0,0,0.3);
+      padding: 8px; border-radius: 18px; border: 2px solid var(--border-color);
+      width: fit-content;
+    }
+
+    .tab-btn {
+      padding: 10px 22px; border-radius: 12px; border: none;
+      background: transparent; color: var(--text-color); font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.95rem;
+      opacity: 0.6; transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--house-primary); color: var(--house-secondary);
+      border: 1px solid var(--house-secondary); opacity: 1;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .tab-pane {
+      display: none; background: var(--card-bg); border-radius: 24px;
+      padding: 28px; border: 2px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); min-height: 600px;
+    }
+    .tab-pane.active { display: block; animation: spellFade 0.4s ease; }
+
+    @keyframes spellFade {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* FullCalendar Hogwarts Skin */
+    .fc { font-family: inherit; }
+    .fc-toolbar-title { font-family: 'Cinzel Decorative', serif !important; font-size: 1.6rem !important; color: var(--house-secondary) !important; }
+    .fc-button-primary {
+      background-color: var(--house-bg) !important; border: 1px solid var(--border-color) !important;
+      color: var(--text-color) !important; font-weight: 700 !important; border-radius: 10px !important;
+    }
+    .fc-button-active { background-color: var(--house-primary) !important; color: var(--house-secondary) !important; border-color: var(--house-secondary) !important; }
+    .fc-event { border: 1px solid var(--house-secondary) !important; border-radius: 8px !important; padding: 4px !important; font-weight: 700 !important; }
+
+    /* Cozy Room & Audio */
+    .cozy-room {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 30px 20px; text-align: center;
+    }
+
+    .pomodoro-timer {
+      font-family: 'Cinzel Decorative', serif; font-size: 6rem;
+      color: var(--house-secondary); text-shadow: 0 0 20px var(--house-secondary);
+      margin: 15px 0; letter-spacing: 2px;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: var(--card-bg); border-radius: 24px; width: 100%; max-width: 480px;
+      padding: 30px; border: 3px solid var(--house-secondary); box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
+
+    .form-control {
+      width: 100%; padding: 12px; border: 1px solid var(--border-color);
+      border-radius: 12px; font-size: 1rem; background: rgba(0,0,0,0.4); color: var(--text-color); outline: none;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- Wand Particles Canvas -->
+  <canvas id="wandCanvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-wand-magic-sparkles brand-wand" onclick="castGlobalSpell(event)"></i>
+      <h1>HOGWARTS AKILLI PLANLAYICI</h1>
+    </div>
+
+    <!-- Hogwarts House Selector -->
+    <div class="house-selector">
+      <button class="house-btn active" title="Gryffindor" onclick="setHouse('gryffindor')">🦁</button>
+      <button class="house-btn" title="Slytherin" onclick="setHouse('slytherin')">🐍</button>
+      <button class="house-btn" title="Ravenclaw" onclick="setHouse('ravenclaw')">🦅</button>
+      <button class="house-btn" title="Hufflepuff" onclick="setHouse('hufflepuff')">🦡</button>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn" onclick="exportCalendarToICS()">
+        <i class="fa-solid fa-scroll"></i> iCal Aktar
+      </button>
+      <button class="btn" onclick="openAddModal()">
+        <i class="fa-solid fa-plus"></i> Görev Ekle
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Dinamik Kategoriler -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">
+          <i class="fa-solid fa-hat-wizard"></i> Büyü Dersleri
+        </div>
+        
+        <div class="category-filter" id="categoryFilterList"></div>
+
+        <form style="display:flex; gap:8px; margin-top:14px;" onsubmit="handleAddCategory(event)">
+          <input type="text" id="newCatName" class="form-control" placeholder="Ders Adı..." required style="padding: 8px;">
+          <input type="color" id="newCatColor" value="#d3a625" style="width: 42px; height: 42px; border: none; border-radius: 8px; cursor: pointer;">
+          <button type="submit" class="btn" style="padding: 8px 12px;"><i class="fa-solid fa-plus"></i></button>
+        </form>
+      </div>
+
+      <!-- Oyuncu Paneli -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">
+          <i class="fa-solid fa-shield-halved"></i> Büyücü İstatistikleri
+        </div>
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-number" id="statPomodoros">0</div>
+            <div class="stat-label">Pomodoro</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="statQuestions">0</div>
+            <div class="stat-label">Soru</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="statNet">0</div>
+            <div class="stat-label">Net</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="statAccuracy">0%</div>
+            <div class="stat-label">İsabet</div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('calendar')">
+          <i class="fa-solid fa-dungeon"></i> Ders Takvimi
+        </button>
+        <button class="tab-btn" onclick="switchTab('pomodoro')">
+          <i class="fa-solid fa-fire-flame-curved"></i> Hogwarts Odak Odası
+        </button>
+        <button class="tab-btn" onclick="switchTab('analytics')">
+          <i class="fa-solid fa-chart-line"></i> Büyü & Net Grafiği
+        </button>
+      </div>
+
+      <!-- Tab 1: Calendar -->
+      <div class="tab-pane active" id="pane-calendar">
+        <div id="calendar"></div>
+      </div>
+
+      <!-- Tab 2: Hogwarts Cozy Room -->
+      <div class="tab-pane" id="pane-pomodoro">
+        <div class="cozy-room">
+          <div style="font-size:3rem; color:var(--house-secondary);">
+            <i class="fa-solid fa-book-journal-whills"></i>
+          </div>
+          <h2 id="pomoStatusText" style="color:var(--house-secondary); font-family:'Cinzel Decorative'; font-size:1.8rem; margin-top:10px;">Hogwarts Kütüphanesi - Odak Seansı</h2>
+          
+          <div class="pomodoro-timer" id="pomoTimerDisplay">25:00</div>
+          
+          <div style="display:flex; gap:15px; margin-bottom:15px;">
+            <button class="btn" id="btnPomoStart" onclick="togglePomodoro()">
+              <i class="fa-solid fa-play"></i> Başlat
+            </button>
+            <button class="btn" onclick="resetPomodoro()">
+              <i class="fa-solid fa-rotate-right"></i> Sıfırla
+            </button>
+            <button class="btn" onclick="openNetModal()">
+              <i class="fa-solid fa-feather-pointed"></i> Net Ekle
+            </button>
+          </div>
+
+          <!-- Web Audio API Zen Sesi -->
+          <div style="background:rgba(0,0,0,0.3); padding:16px 24px; border-radius:18px; border:1px solid var(--border-color); display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div style="font-family:'Cinzel Decorative'; font-size:1.1rem; color:var(--house-secondary);">
+              <i class="fa-solid fa-om"></i> Dahili Zen Odak Sesi (432Hz)
+            </div>
+
+            <button class="btn" id="btnZenAudio" style="margin-top:6px;" onclick="toggleZenAudio()">
+              <i class="fa-solid fa-music"></i> Zen Sesi Başlat / Durdur
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Analytics -->
+      <div class="tab-pane" id="pane-analytics">
+        <h3 style="font-family:'Cinzel Decorative'; font-size:1.8rem; color:var(--house-secondary); margin-bottom:20px;">📊 Büyü ve Net İlerlemesi</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:16px; border:1px solid var(--border-color);">
+            <h4 style="margin-bottom:15px; color:var(--house-secondary);">Çalışma Saati Dağılımı</h4>
+            <canvas id="categoryChart"></canvas>
+          </div>
+          <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:16px; border:1px solid var(--border-color);">
+            <h4 style="margin-bottom:15px; color:var(--house-secondary);">Net İlerlemesi</h4>
+            <canvas id="netProgressChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Event Modal -->
+  <div class="modal-overlay" id="eventModal">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 id="modalTitle" style="font-family:'Cinzel Decorative'; font-size:1.4rem; color:var(--house-secondary);">Yeni Büyü / Görev Ekle</h3>
+        <button class="btn" style="padding:6px 12px;" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="eventForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="eventId">
+        
+        <div style="margin-bottom:15px;">
+          <label style="color:var(--house-secondary); font-size:0.9rem;">Görev Başlığı</label>
+          <input type="text" id="title" class="form-control"  required>
+        </div>
+
+        <div style="margin-bottom:15px;">
+          <label style="color:var(--house-secondary); font-size:0.9rem;">Kategori</label>
+          <select id="category" class="form-control" required></select>
+        </div>
+
+        <div class="form-row" style="margin-bottom:15px;">
+          <div>
+            <label style="color:var(--house-secondary); font-size:0.9rem;">Başlangıç</label>
+            <input type="datetime-local" id="startDate" class="form-control" required>
+          </div>
+          <div>
+            <label style="color:var(--house-secondary); font-size:0.9rem;">Bitiş</label>
+            <input type="datetime-local" id="endDate" class="form-control" required>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn" id="btnDeleteEvent" style="display:none; background:#740001;" onclick="deleteSelectedEvent()">Sil</button>
+          <button type="button" class="btn" onclick="closeModal()">İptal</button>
+          <button type="submit" class="btn">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Soru & Net Modal -->
+  <div class="modal-overlay" id="netModal">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-family:'Cinzel Decorative'; font-size:1.4rem; color:var(--house-secondary);">🎯 Net Kaydı</h3>
+        <button class="btn" style="padding:6px 12px;" onclick="closeNetModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleNetSubmit(event)">
+        <div style="margin-bottom:15px;">
+          <label style="color:var(--house-secondary); font-size:0.9rem;">Ders</label>
+          <select id="netCategory" class="form-control"></select>
+        </div>
+
+        <div class="form-row" style="margin-bottom:15px;">
+          <div>
+            <label style="color:var(--house-secondary); font-size:0.9rem;">Doğru</label>
+            <input type="number" id="netCorrect" class="form-control" min="0" value="0" required onchange="calcNet()">
+          </div>
+          <div>
+            <label style="color:var(--house-secondary); font-size:0.9rem;">Yanlış</label>
+            <input type="number" id="netWrong" class="form-control" min="0" value="0" required onchange="calcNet()">
+          </div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+          <label style="color:var(--house-secondary); font-size:0.9rem;">Hesaplanan Net</label>
+          <input type="text" id="netCalculated" class="form-control" value="0.00" readonly style="font-family:'Cinzel Decorative'; font-size:1.6rem; color:var(--house-secondary);">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn" onclick="closeNetModal()">İptal</button>
+          <button type="submit" class="btn">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Magic Wand Glitter Particle System (Parlak Simli Efekt)
+    const canvas = document.getElementById('wandCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('click', (e) => {
+      createSparks(e.clientX, e.clientY);
+    });
+
+    function createSparks(x, y) {
+      // Parlak Altın, Elmas Mavisi, Pembe ve Gümüş Sim Renkleri
+      const colors = ['#ffe600', '#ffffff', '#ffd700', '#e0f7fa', '#f472b6', '#fff59d'];
+      for (let i = 0; i < 35; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10,
+          size: Math.random() * 5 + 1.5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1,
+          decay: Math.random() * 0.02 + 0.015,
+          sparkleSpeed: Math.random() * 0.2 + 0.1,
+          isStar: Math.random() > 0.4
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, index) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        p.alpha -= p.decay;
+
+        const currentAlpha = Math.max(0, p.alpha * (0.6 + Math.sin(Date.now() * p.sparkleSpeed) * 0.4));
+
+        ctx.save();
+        ctx.globalAlpha = currentAlpha;
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = p.color;
+
+        if (p.isStar) {
+          // 4 Köşeli Parlak Büyü Yıldızı Çizimi
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y - p.size * 2);
+          ctx.quadraticCurveTo(p.x, p.y, p.x + p.size * 2, p.y);
+          ctx.quadraticCurveTo(p.x, p.y, p.x, p.y + p.size * 2);
+          ctx.quadraticCurveTo(p.x, p.y, p.x - p.size * 2, p.y);
+          ctx.quadraticCurveTo(p.x, p.y, p.x, p.y - p.size * 2);
+          ctx.fill();
+        } else {
+          // Daire Sim
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.restore();
+
+        if (p.alpha <= 0) particles.splice(index, 1);
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    function castGlobalSpell(e) {
+      createSparks(e.clientX, e.clientY);
+    }
+
+    // Hogwarts House Switcher
+    function setHouse(houseName) {
+      document.documentElement.setAttribute('data-house', houseName);
+      document.querySelectorAll('.house-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+
+    // App State
+    let calendar;
+    let rawEvents = JSON.parse(localStorage.getItem('smart_calendar_events')) || [];
+    let categories = JSON.parse(localStorage.getItem('smart_categories')) || [
+      { id: 'cat_1', name: 'ALES Matematik', color: '#d3a625' },
+      { id: 'cat_2', name: 'YÖKDİL İngilizce', color: '#740001' },
+      { id: 'cat_3', name: 'Sayısal Mantık', color: '#1a472a' }
+    ];
+    let netRecords = JSON.parse(localStorage.getItem('smart_net_records')) || [];
+    let completedPomodoros = parseInt(localStorage.getItem('smart_pomo_count')) || 0;
+
+    // Pomodoro & Audio State
+    let pomoTime = 25 * 60;
+    let pomoTimer = null;
+    let isPomoRunning = false;
+    let isWorkSession = true;
+    let audioCtx = null;
+    let zenOsc = null;
+    let zenGain = null;
+
+    // Charts
+    let categoryChartObj = null;
+    let netChartObj = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCategoryList();
+      initCalendar();
+      updateProductivityStats();
+      initCharts();
+    });
+
+    function toggleZenAudio() {
+      const btn = document.getElementById('btnZenAudio');
+      if (zenOsc) {
+        zenOsc.stop(); zenOsc = null;
+        btn.innerHTML = '<i class="fa-solid fa-music"></i> Zen Sesi Başlat';
+      } else {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        zenOsc = audioCtx.createOscillator();
+        zenGain = audioCtx.createGain();
+        zenOsc.type = 'sine';
+        zenOsc.frequency.setValueAtTime(432, audioCtx.currentTime);
+        zenGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        zenOsc.connect(zenGain);
+        zenGain.connect(audioCtx.destination);
+        zenOsc.start();
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i> Sesi Durdur';
+      }
+    }
+
+    function renderCategoryList() {
+      const filterList = document.getElementById('categoryFilterList');
+      const selectModal = document.getElementById('category');
+      const selectNet = document.getElementById('netCategory');
+
+      filterList.innerHTML = ''; selectModal.innerHTML = ''; selectNet.innerHTML = '';
+
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.innerHTML = `
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" checked value="${cat.id}" onchange="filterEvents()">
+            <span class="category-dot" style="background-color: ${cat.color};"></span>
+            ${cat.name}
+          </label>
+          <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="deleteCategory('${cat.id}')">✕</button>
+        `;
+        filterList.appendChild(item);
+
+        const opt1 = document.createElement('option'); opt1.value = cat.id; opt1.innerText = cat.name; selectModal.appendChild(opt1);
+        const opt2 = document.createElement('option'); opt2.value = cat.name; opt2.innerText = cat.name; selectNet.appendChild(opt2);
+      });
+    }
+
+    function handleAddCategory(e) {
+      e.preventDefault();
+      const name = document.getElementById('newCatName').value.trim();
+      const color = document.getElementById('newCatColor').value;
+      if (!name) return;
+
+      categories.push({ id: 'cat_' + Date.now(), name, color });
+      localStorage.setItem('smart_categories', JSON.stringify(categories));
+      document.getElementById('newCatName').value = '';
+      renderCategoryList();
+      filterEvents();
+    }
+
+    function deleteCategory(id) {
+      categories = categories.filter(c => c.id !== id);
+      localStorage.setItem('smart_categories', JSON.stringify(categories));
+      renderCategoryList();
+      filterEvents();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+      document.getElementById(`pane-${tabId}`).classList.add('active');
+      event.currentTarget?.classList.add('active');
+
+      if (tabId === 'calendar') setTimeout(() => calendar.render(), 100);
+      else if (tabId === 'analytics') initCharts();
+    }
+
+    function initCalendar() {
+      const calendarEl = document.getElementById('calendar');
+
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'tr',
+        timeZone: 'local',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        buttonText: { today: 'Bugün', month: 'Ay', week: 'Hafta', day: 'Gün', list: 'Liste' },
+        editable: true,
+        selectable: true,
+        select: (info) => openAddModal(info.startStr, info.endStr),
+        eventClick: (info) => openEditModal(info.event),
+        events: getFormattedEvents()
+      });
+
+      calendar.render();
+    }
+
+    function getFormattedEvents() {
+      const activeCatIds = Array.from(document.querySelectorAll('#categoryFilterList input:checked')).map(cb => cb.value);
+      return rawEvents
+        .filter(e => activeCatIds.includes(e.category))
+        .map(e => {
+          const cat = categories.find(c => c.id === e.category);
+          const color = cat ? cat.color : '#d3a625';
+          return {
+            id: e.id,
+            title: e.title,
+            start: e.start,
+            end: e.end,
+            backgroundColor: color,
+            borderColor: color,
+            textColor: '#ffffff',
+            extendedProps: { category: e.category }
+          };
+        });
+    }
+
+    function filterEvents() {
+      calendar.removeAllEvents();
+      calendar.addEventSource(getFormattedEvents());
+    }
+
+    function openAddModal(startStr = null, endStr = null) {
+      document.getElementById('modalTitle').innerText = 'Yeni Büyü / Görev Ekle';
+      document.getElementById('eventId').value = '';
+      document.getElementById('eventForm').reset();
+      document.getElementById('btnDeleteEvent').style.display = 'none';
+
+      const now = new Date();
+      const defaultStart = startStr ? new Date(startStr) : now;
+      const defaultEnd = endStr ? new Date(endStr) : new Date(now.getTime() + 60 * 60 * 1000);
+
+      document.getElementById('startDate').value = formatDateForInput(defaultStart);
+      document.getElementById('endDate').value = formatDateForInput(defaultEnd);
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function openEditModal(calEvent) {
+      document.getElementById('modalTitle').innerText = 'Görevi Düzenle';
+      document.getElementById('eventId').value = calEvent.id;
+      document.getElementById('title').value = calEvent.title;
+      document.getElementById('category').value = calEvent.extendedProps.category;
+      document.getElementById('startDate').value = formatDateForInput(calEvent.start);
+      document.getElementById('endDate').value = formatDateForInput(calEvent.end || calEvent.start);
+
+      document.getElementById('btnDeleteEvent').style.display = 'block';
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('eventModal').classList.remove('active'); }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('eventId').value || Date.now().toString();
+      const title = document.getElementById('title').value;
+      const category = document.getElementById('category').value;
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+
+      const eventData = { id, title, category, start, end };
+      const idx = rawEvents.findIndex(item => item.id === id);
+      if (idx > -1) rawEvents[idx] = eventData;
+      else rawEvents.push(eventData);
+
+      localStorage.setItem('smart_calendar_events', JSON.stringify(rawEvents));
+      filterEvents();
+      closeModal();
+    }
+
+    function deleteSelectedEvent() {
+      const id = document.getElementById('eventId').value;
+      if (!id) return;
+      rawEvents = rawEvents.filter(e => e.id !== id);
+      localStorage.setItem('smart_calendar_events', JSON.stringify(rawEvents));
+      filterEvents();
+      closeModal();
+    }
+
+    function formatDateForInput(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 16);
+    }
+
+    function togglePomodoro() {
+      const btn = document.getElementById('btnPomoStart');
+      if (isPomoRunning) {
+        clearInterval(pomoTimer); isPomoRunning = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Devam Et';
+      } else {
+        isPomoRunning = true;
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i> Duraklat';
+        pomoTimer = setInterval(updatePomoTimer, 1000);
+      }
+    }
+
+    function updatePomoTimer() {
+      pomoTime--;
+      const mins = Math.floor(pomoTime / 60);
+      const secs = pomoTime % 60;
+      document.getElementById('pomoTimerDisplay').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (pomoTime <= 0) {
+        clearInterval(pomoTimer);
+        if (isWorkSession) {
+          completedPomodoros++;
+          localStorage.setItem('smart_pomo_count', completedPomodoros);
+          updateProductivityStats();
+          isWorkSession = false; pomoTime = 5 * 60;
+          document.getElementById('pomoStatusText').innerText = 'Hogwarts Molası! (5 Dakika)';
+          alert('Pomodoro Seansı Tamamlandı!'); openNetModal();
+        } else {
+          isWorkSession = true; pomoTime = 25 * 60;
+          document.getElementById('pomoStatusText').innerText = 'Hogwarts Kütüphanesi - Odak Seansı';
+        }
+        isPomoRunning = false;
+        document.getElementById('btnPomoStart').innerHTML = '<i class="fa-solid fa-play"></i> Başlat';
+      }
+    }
+
+    function resetPomodoro() {
+      clearInterval(pomoTimer); isPomoRunning = false; isWorkSession = true; pomoTime = 25 * 60;
+      document.getElementById('pomoTimerDisplay').innerText = '25:00';
+      document.getElementById('btnPomoStart').innerHTML = '<i class="fa-solid fa-play"></i> Başlat';
+    }
+
+    function openNetModal() { document.getElementById('netModal').classList.add('active'); }
+    function closeNetModal() { document.getElementById('netModal').classList.remove('active'); }
+
+    function calcNet() {
+      const correct = parseInt(document.getElementById('netCorrect').value) || 0;
+      const wrong = parseInt(document.getElementById('netWrong').value) || 0;
+      const net = Math.max(0, correct - (wrong * 0.25));
+      document.getElementById('netCalculated').value = net.toFixed(2);
+    }
+
+    function handleNetSubmit(e) {
+      e.preventDefault();
+      const category = document.getElementById('netCategory').value;
+      const correct = parseInt(document.getElementById('netCorrect').value) || 0;
+      const wrong = parseInt(document.getElementById('netWrong').value) || 0;
+      const net = parseFloat(document.getElementById('netCalculated').value) || 0;
+
+      netRecords.push({ id: Date.now(), date: new Date().toLocaleDateString('tr-TR'), category, correct, wrong, net });
+      localStorage.setItem('smart_net_records', JSON.stringify(netRecords));
+      updateProductivityStats();
+      if (netChartObj) initCharts();
+      closeNetModal();
+    }
+
+    function updateProductivityStats() {
+      document.getElementById('statPomodoros').innerText = completedPomodoros;
+      let totalQuestions = 0, totalCorrect = 0, totalNet = 0;
+
+      netRecords.forEach(r => {
+        totalQuestions += (r.correct + r.wrong);
+        totalCorrect += r.correct;
+        totalNet += r.net;
+      });
+
+      document.getElementById('statQuestions').innerText = totalQuestions;
+      document.getElementById('statNet').innerText = totalNet.toFixed(1);
+
+      const acc = totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(0) : 0;
+      document.getElementById('statAccuracy').innerText = `${acc}%`;
+    }
+
+    function exportCalendarToICS() {
+      if (rawEvents.length === 0) return alert('Dışa aktarılacak görev bulunamadı!');
+
+      let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Hogwarts Study With Me//TR\r\n";
+      rawEvents.forEach(e => {
+        const startStr = new Date(e.start).toISOString().replace(/-|:|\.\d+/g, '');
+        const endStr = new Date(e.end || e.start).toISOString().replace(/-|:|\.\d+/g, '');
+        icsContent += `BEGIN:VEVENT\r\nSUMMARY:${e.title}\r\nDTSTART:${startStr}\r\nDTEND:${endStr}\r\nEND:VEVENT\r\n`;
+      });
+      icsContent += "END:VCALENDAR";
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'hogwarts_ders_takvimi.ics');
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    function initCharts() {
+      const catCounts = {};
+      categories.forEach(c => catCounts[c.id] = 0);
+
+      rawEvents.forEach(e => {
+        const start = new Date(e.start); const end = new Date(e.end || e.start);
+        const hours = Math.max(0.5, (end - start) / (1000 * 60 * 60));
+        if (catCounts[e.category] !== undefined) catCounts[e.category] += hours;
+      });
+
+      const ctxCat = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartObj) categoryChartObj.destroy();
+
+      categoryChartObj = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: categories.map(c => c.name),
+          datasets: [{
+            data: categories.map(c => catCounts[c.id] || 0),
+            backgroundColor: categories.map(c => c.color)
+          }]
+        },
+        options: { plugins: { legend: { labels: { color: '#fff8e7', font: { family: 'Fredoka' } } } } }
+      });
+
+      const ctxNet = document.getElementById('netProgressChart').getContext('2d');
+      if (netChartObj) netChartObj.destroy();
+
+      const last7 = netRecords.slice(-7);
+      netChartObj = new Chart(ctxNet, {
+        type: 'bar',
+        data: {
+          labels: last7.length ? last7.map(r => `${r.date} (${r.category.slice(0, 5)})`) : ['Kayıt Yok'],
+          datasets: [{ label: 'Net Sayısı', data: last7.length ? last7.map(r => r.net) : [0], backgroundColor: '#d3a625' }]
+        },
+        options: {
+          scales: {
+            x: { ticks: { color: '#fff8e7', font: { family: 'Fredoka' } } },
+            y: { ticks: { color: '#fff8e7', font: { family: 'Fredoka' } }, beginAtZero: true }
+          },
+          plugins: { legend: { labels: { color: '#fff8e7', font: { family: 'Fredoka' } } } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
