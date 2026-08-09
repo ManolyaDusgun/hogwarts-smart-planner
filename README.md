@@ -1,26 +1,23 @@
-# hogwarts-smart-planner
 # 🧙‍♂️ Hogwarts & Minecraft Smart Event Planner
-
-![Hogwarts Smart Planner Header](https://github.com/ManolyaDusgun.com/hogwarts-smart-planner/main/preview.png)
 
 > **Hogwarts ve Minecraft estetiğiyle tasarlanmış, büyülü asa efektleri, bina temaları, Pomodoro odak zamanlayıcısı ve sınav net takip modülü içeren web tabanlı akıllı etkinlik ve ders planlayıcısı.**
 
 ---
 
 ## ⚡ Canlı Önizleme & Demo
-👉 **[Web Sitesini Canlıda Dene](https://ManolyaDusgun.github.io/hogwarts-smart-planner/)**
+👉 **[Web Sitesini Canlıda Dene](https://manolyadusgun.github.io/hogwarts-smart-planner/)**
 
 ---
 
-## 📸 Ekran Görüntüleri (Screenshots)
+## 📸 Ekran Görüntüleri
 
 | Ders Takvimi & Bina Seçici | Hogwarts Odak Odası |
 | :---: | :---: |
-| ![Takvim Görünümü](https://github.com/ManolyaDusgun.com/hogwarts-smart-planner/main/assets/screenshot-calendar.png) | ![Odak Odası](https://raw.githubusercontent.com/username/hogwarts-smart-planner/main/assets/screenshot-pomodoro.png) |
+| ![Takvim Görünümü](./screenshot-calendar.png) | ![Odak Odası](./screenshot-pomodoro.png) |
 
 | Büyücü İstatistikleri & Grafik | Net & Soru Takibi |
 | :---: | :---: |
-| ![İstatistikler](https://github.com/ManolyaDusgun.com/hogwarts-smart-planner/main/assets/screenshot-analytics.png) | ![Net Takibi](https://raw.githubusercontent.com/username/hogwarts-smart-planner/main/assets/screenshot-net.png) |
+| ![İstatistikler](./screenshot-analytics.png) | ![Net Takibi](./screenshot-net.png) |
 
 ---
 
@@ -56,4 +53,4 @@ Proje tamamen bağımsız (Client-Side) bir yapıdadır. Herhangi bir paket yük
 
 1. Depoyu klonlayın:
    ```bash
-   git clone [https://github.com/username/hogwarts-smart-planner.git](https://github.com/username/hogwarts-smart-planner.git)
+   git clone [https://github.com/ManolyaDusgun/hogwarts-smart-planner.git](https://github.com/ManolyaDusgun/hogwarts-smart-planner.git)
